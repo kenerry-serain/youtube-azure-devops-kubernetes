@@ -1,4 +1,5 @@
 # Starter pipeline
+
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
@@ -63,9 +64,6 @@ stages:
             awsCommand: 'eks'
             awsSubCommand: 'update-kubeconfig'
             awsArguments: '--name eks-cluster'
-        - task: AWSShellScript@1
+        - task: CmdLine@2
           inputs:
-            awsCredentials: 'aws-connection'
-            regionName: 'us-east-1'
-            scriptType: 'inline'
-            inlineScript: 'kubectl apply -k manifests/'
+            script: 'kubectl apply -k manifests/'
