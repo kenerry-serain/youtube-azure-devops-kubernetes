@@ -70,4 +70,4 @@ stages:
             awsCredentials: 'aws-connection'
             regionName: 'us-east-1'
             scriptType: 'inline'
-            inlineScript: 'export KUBECONFIG=~/.kube/config && kubectl apply -k manifests/'
+            inlineScript: kubectl apply -k manifests/'
