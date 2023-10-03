@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: application-deployment
+  labels:
+    app: application
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: application
+  template:
+    metadata:
+      labels:
+        app: application
+    spec:
+      containers:
+      - name: application
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "0.5"
+          limits:
+            memory: "200Mi"
+            cpu: "1"
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        image: 968225077300.dkr.ecr.us-east-1.amazonaws.com/youtube/backend-application:1.0.0
+        ports:
+        - containerPort: 80
