@@ -68,11 +68,6 @@ stages:
         - script: 'cat ~/.kube/config'
           displayName: 'Display Kubeconfig'
 
-        - script: 'echo "##vso[task.setvariable variable=KUBECONFIG]~/.kube/config"'
-          displayName: 'Set KUBECONFIG Variable'
-
-        - script: 'kubectl apply -k manifests/'
+        - script: 'kubectl apply -k manifests/ --kubeconfig ~/.kube/config'
           displayName: 'kubectl apply'
-          env:
-            KUBECONFIG: $(KUBECONFIG)
         
