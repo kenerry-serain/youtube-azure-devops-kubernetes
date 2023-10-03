@@ -14,7 +14,7 @@ variables:
   buildConfiguration: "Release"
   awsRegion: 'us-east-1'
   ecrRepository: '968225077300.dkr.ecr.us-east-1.amazonaws.com/youtube/backend-application'
-  dockerBuildContext: '.'
+  dockerBuildContext: 'src/'
   dockerFilePath: 'src/BackEndApplication.Api/Dockerfile'
 
 stages:
