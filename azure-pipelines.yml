@@ -65,12 +65,9 @@ stages:
             awsSubCommand: 'update-kubeconfig'
             awsArguments: '--name eks-cluster'
 
-        - script: 'cat ~/.kube/config'
-          displayName: 'Display Kubeconfig'
-
         - task: AWSShellScript@1
           inputs:
             awsCredentials: 'aws-connection'
             regionName: 'us-east-1'
             scriptType: 'inline'
-            inlineScript: 'aws sts get-caller-identity && kubectl apply -k manifests/ --kubeconfig ~/.kube/config'
+            inlineScript: 'export KUBECONFIG=~/.kube/config && kubectl apply -k manifests/'
