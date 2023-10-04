@@ -3,6 +3,6 @@ resources:
 images:
 - name: 968225077300.dkr.ecr.us-east-1.amazonaws.com/youtube/backend-application
   newName: 968225077300.dkr.ecr.us-east-1.amazonaws.com/youtube/backend-application
-  newTag: "20231004.4"
+  newTag: "2.0"
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
