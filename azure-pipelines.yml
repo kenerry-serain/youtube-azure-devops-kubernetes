@@ -1,5 +1,4 @@
 # Starter pipeline
-
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
@@ -9,71 +8,69 @@ trigger:
 
 pool:
   vmImage: ubuntu-latest
-    
+
 variables:
-  solution: "**/*.sln"
-  buildConfiguration: "Release"
-  awsRegion: 'us-east-1'
-  ecrRepositoryPrefix: '968225077300.dkr.ecr.us-east-1.amazonaws.com'
-  ecrRepository: 'youtube/backend-application'
-  dockerBuildContext: 'src/'
-  dockerFilePath: 'src/BackEndApplication.Api/Dockerfile'
+  ecrRepositoryPrefix: 968225077300.dkr.ecr.us-east-1.amazonaws.com
+  ecrRepository: youtube/backend-application
+  awsRegion: us-east-1
+  eksClusterName: eks-cluster
 
 stages:
-  - stage: DEV
-    displayName: DEV
-    jobs:
-      - job: DevJob
-        steps:
-        - task: UseDotNet@2
-          displayName: Install .NET 6 SDK
-          inputs:
-            version: '6.x'
-            packageType: sdk
-        - task: DotNetCoreCLI@2
-          displayName: "DotNetCore - Building projects"
-          inputs:
-            command: "build"
-            projects: "**/*.csproj"
-            arguments: "--configuration $(buildConfiguration)"
-        - task: DotNetCoreCLI@2
-          displayName: "DotNetCore - Running Tests"
-          inputs:
-            command: test
-            projects: "**/*Test/*.csproj"
-        - task: Docker@2
-          displayName: "Docker - Building Image"
-          inputs:
-            buildContext: $(dockerBuildContext)
-            command: "build"
-            Dockerfile: $(dockerFilePath)
-            arguments: "-t $(ecrRepository)"
-            tags: latest
-        - task: ECRPushImage@1
-          displayName: "AWS - Pushing image to ECR"
-          inputs:
-            awsCredentials: "aws-connection"
-            regionName: "$(awsRegion)"
-            sourceImageName: "$(ecrRepository)"
-            repositoryName: "$(ecrRepository)"
-            sourceImageTag: "latest"
-            pushTag: $(Build.BuildNumber)
-        - task: AWSCLI@1
-          inputs:
-            awsCredentials: 'aws-connection'
-            regionName: 'us-east-1'
-            awsCommand: 'eks'
-            awsSubCommand: 'update-kubeconfig'
-            awsArguments: '--name eks-cluster'
-            
-        - script: kustomize edit set image application=$(ecrRepositoryPrefix)/$(ecrRepository):$(Build.BuildNumber)
-          workingDirectory: manifests
+- stage: Development
+  jobs:
+  - job: BackEndApplication
+    steps:
+      - task: UseDotNet@2
+        displayName: "Installing DotNet 6.x"
+        inputs:
+          packageType: 'sdk'
+          version: '6.x'
+      - task: DotNetCoreCLI@2
+        displayName: "Running DotNet Tests"
+        inputs:
+          command: 'test'
+          projects: '**/*.csproj'
+          publishTestResults: false
+      - task: Docker@2
+        displayName: "Building Docker Image"
+        inputs:
+          command: 'build'
+          Dockerfile: 'src/BackEndApplication.Api/Dockerfile'
+          buildContext: 'src/'
+          tags: 'latest'
+          arguments: '-t $(ecrRepository)'
           
-        - script: cat manifests/kustomization.yml
+      - task: ECRPushImage@1
+        displayName: "Pushing Docker Image to ECR"
+        inputs:
+          awsCredentials: 'aws-connection'
+          regionName: '$(awsRegion)'
+          imageSource: 'imagename'
+          sourceImageName: '$(ecrRepository)'
+          repositoryName: '$(ecrRepository)'
+          pushTag: '$(Build.BuildId)'
+        
+      - task: AWSCLI@1
+        displayName: "Updating KubeConfig"
+        inputs:
+          awsCredentials: 'aws-connection'
+          regionName: '$(awsRegion)'
+          awsCommand: 'eks'
+          awsSubCommand: 'update-kubeconfig'
+          awsArguments: '--region $(awsRegion) --name $(eksClusterName)'
+          
+      - script: |
+            kustomize edit set image \
+            $(ecrRepositoryPrefix)/$(ecrRepository)=$(ecrRepositoryPrefix)/$(ecrRepository):$(Build.BuildId)
+        workingDirectory: manifests
+        displayName: "Setting New Image using Kustomize"
 
-        - task: AWSShellScript@1
-          inputs:
-            awsCredentials: 'aws-connection'
-            regionName: 'us-east-1'
-            scriptType: 'inline'
-            inlineScript: kubectl apply -k manifests/
+      - task: AWSShellScript@1
+        displayName: "Deploying New Application Version on EKS"
+        inputs:
+          awsCredentials: 'aws-connection'
+          regionName: 'us-east-1'
+          scriptType: 'inline'
+          workingDirectory: manifests
+          inlineScript: |
+            kubectl apply -k .
