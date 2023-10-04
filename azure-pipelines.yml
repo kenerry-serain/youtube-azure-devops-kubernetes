@@ -14,6 +14,7 @@ variables:
   solution: "**/*.sln"
   buildConfiguration: "Release"
   awsRegion: 'us-east-1'
+  ecrRepositoryPrefix: '968225077300.dkr.ecr.us-east-1.amazonaws.com'
   ecrRepository: 'youtube/backend-application'
   dockerBuildContext: 'src/'
   dockerFilePath: 'src/BackEndApplication.Api/Dockerfile'
@@ -64,6 +65,9 @@ stages:
             awsCommand: 'eks'
             awsSubCommand: 'update-kubeconfig'
             awsArguments: '--name eks-cluster'
+            
+        - script: kustomize set image application=$(ecrRepositoryPrefix)/$(ecrRepository):$(Build.BuildNumber)
+        - script: cat manifests/kustomization.yml
 
         - task: AWSShellScript@1
           inputs:
