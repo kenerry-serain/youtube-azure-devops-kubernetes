@@ -1,0 +1,68 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  ecrRepository: youtube/backend-application
+  ecrRepositoryPrefix: 968225077300.dkr.ecr.us-east-1.amazonaws.com
+  awsRegion: us-east-1
+  eksClusterName: eks-cluster
+
+stages:
+- stage: Dev
+  jobs:
+  - job: BackEndApplicationJob
+    steps:
+    - task: UseDotNet@2
+      displayName: "Installing DotNet"
+      inputs:
+        packageType: 'sdk'
+        version: '6.x'
+    - task: DotNetCoreCLI@2
+      displayName: "Running Application Test"
+      inputs:
+        command: 'test'
+        projects: '**/*.csproj'
+        publishTestResults: false
+        testRunTitle: 'Running Tests'
+    - task: Docker@2
+      displayName: "Building Docker Image"
+      inputs:
+        command: 'build'
+        Dockerfile: 'Dockerfile'
+        buildContext: 'src/BackEndApplication.Api'
+        tags: 'latest'
+        arguments: '-t $(ecrRepository)'
+
+    - task: ECRPushImage@1
+      displayName: "Uploading Image to ECR"
+      inputs:
+        awsCredentials: 'aws-connection'
+        regionName: '$(awsRegion)'
+        imageSource: 'imagename'
+        sourceImageName: '$(ecrRepository)'
+        repositoryName: '$(ecrRepository)'
+        pushTag: '$(Build.BuildId)'
+        
+    - script: | 
+        kustomize edit set image $(ecrRepositoryPrefix)/$(ecrRepository)=$(ecrRepositoryPrefix)/$(ecrRepository):$(Build.BuildId)
+      displayName: "Setting Kustomize New Tag"
+      workingDirectory: manifests
+    - task: AWSCLI@1
+      displayName: "Updating KubeConfig"
+      inputs:
+        awsCredentials: 'aws-connection'
+        regionName: '$(awsRegion)'
+        awsCommand: 'eks'
+        awsSubCommand: 'update-kubeconfig'
+        awsArguments: '--region $(awsRegion) --name $(eksClusterName)'
+
+    - script: kubectl apply -k manifests
+      displayName: "Deploying on EKS"
