@@ -26,6 +26,6 @@ spec:
         env:
         - name: ASPNETCORE_ENVIRONMENT
           value: Development
-        image: 968225077300.dkr.ecr.us-east-1.amazonaws.com/youtube/backend-application:1.0.0
+        image: 968225077300.dkr.ecr.us-east-1.amazonaws.com/youtube/backend-application
         ports:
         - containerPort: 80
