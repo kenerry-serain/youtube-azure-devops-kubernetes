@@ -36,8 +36,8 @@ stages:
       displayName: "Building Docker Image"
       inputs:
         command: 'build'
-        Dockerfile: 'Dockerfile'
-        buildContext: 'src/BackEndApplication.Api'
+        Dockerfile: 'src/BackEndApplication.Api/Dockerfile'
+        buildContext: 'src/'
         tags: 'latest'
         arguments: '-t $(ecrRepository)'
 
@@ -46,7 +46,7 @@ stages:
       inputs:
         awsCredentials: 'aws-connection'
         regionName: '$(awsRegion)'
-        imageSource: 'imagename'
+        imageSource: '$(ecrRepository)'
         sourceImageName: '$(ecrRepository)'
         repositoryName: '$(ecrRepository)'
         pushTag: '$(Build.BuildId)'
