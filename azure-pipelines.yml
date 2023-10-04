@@ -67,6 +67,8 @@ stages:
             awsArguments: '--name eks-cluster'
             
         - script: kustomize edit set image application=$(ecrRepositoryPrefix)/$(ecrRepository):$(Build.BuildNumber)
+          workingDirectory: manifests
+          
         - script: cat manifests/kustomization.yml
 
         - task: AWSShellScript@1
