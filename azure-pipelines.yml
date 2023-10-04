@@ -42,15 +42,15 @@ stages:
         arguments: '-t $(ecrRepository)'
 
     - task: ECRPushImage@1
-      displayName: "Uploading Image to ECR"
+      displayName: "AWS - Pushing image to ECR"
       inputs:
-        awsCredentials: 'aws-connection'
-        regionName: '$(awsRegion)'
-        imageSource: 'imageName'
-        sourceImageName: '$(ecrRepository)'
-        repositoryName: '$(ecrRepository)'
-        pushTag: '$(Build.BuildId)'
-        
+        awsCredentials: "aws-connection"
+        regionName: "$(awsRegion)"
+        sourceImageName: "$(ecrRepository)"
+        repositoryName: "$(ecrRepository)"
+        sourceImageTag: "latest"
+        pushTag: $(Build.BuildNumber)
+      
     - script: | 
         kustomize edit set image $(ecrRepositoryPrefix)/$(ecrRepository)=$(ecrRepositoryPrefix)/$(ecrRepository):$(Build.BuildId)
       displayName: "Setting Kustomize New Tag"
