@@ -71,6 +71,5 @@ stages:
           awsCredentials: 'aws-connection'
           regionName: 'us-east-1'
           scriptType: 'inline'
-          workingDirectory: manifests
           inlineScript: |
-            kubectl apply -k .
+            kubectl apply -k manifests
